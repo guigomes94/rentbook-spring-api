@@ -12,6 +12,7 @@ import com.rentbook.api.models.Book;
 import com.rentbook.api.models.Rent;
 import com.rentbook.api.models.RentDTO;
 import com.rentbook.api.repositories.RentRepository;
+import com.rentbook.api.services.exceptions.BookAlreadyDevolved;
 import com.rentbook.api.services.exceptions.EntityNotFoundException;
 
 @Service
@@ -77,19 +78,12 @@ public class RentService {
 		List<Rent> calculatedRents = new ArrayList<>();
 
 		for (Rent rent : rents) {
-			LocalDate rentDate = rent.getRentDate();
-			LocalDate devolutionDate = rent.getDevolutionDate();
-			LocalDate today = LocalDate.now();
-			Double value = rent.getPaymentValue();
-			Double lateFee = 0.0;
+			Double value = 0.0;
 			
-			if (value == null) {
-				value = rent.calcRent(rentDate, devolutionDate);
-			}
-
-			if (devolutionDate.isBefore(today)) {
-				value = rent.calcRent(rentDate, today);
-				lateFee = rent.calcTicket(value);
+			if (rent.getPaymentValue() != null) {
+				value = rent.getPaymentValue();
+			} else {
+				value = rent.calcRent(rent.getRentDate(), rent.getDevolutionDate());
 			}
 
 			Rent response = new Rent();
@@ -98,7 +92,7 @@ public class RentService {
 			response.setBook(rent.getBook());
 			response.setRentDate(rent.getRentDate());
 			response.setDevolutionDate(rent.getDevolutionDate());
-			response.setPaymentValue(value + lateFee);
+			response.setPaymentValue(value);
 
 			calculatedRents.add(response);
 		}
@@ -133,25 +127,31 @@ public class RentService {
 		
 		if (oldObj.isPresent()) {
 			Rent updated = oldObj.get();
+			
+			if (updated.getPaymentValue() != null) {
+				throw new BookAlreadyDevolved("This book has already been devolved!");
+			}
+			
 			LocalDate rentDate = updated.getRentDate();
 			LocalDate devolutionDate = updated.getDevolutionDate();
 			LocalDate today = LocalDate.now();
 			Double paymentValue = updated.calcRent(rentDate, devolutionDate);
 			Double lateFee = 0.0;
 			
-			if (devolutionDate.isAfter(today)) {
+			if (today.isAfter(devolutionDate)) {
 				devolutionDate = today;
 				paymentValue = updated.calcRent(rentDate, devolutionDate);
 				lateFee = updated.calcTicket(paymentValue);
+				updated.setDevolutionDate(today);
 			}
 			
-			if (devolutionDate.isBefore(today)) {
+			if (today.isBefore(devolutionDate)) {
 				devolutionDate = today;
 				paymentValue = updated.calcRent(rentDate, devolutionDate);
+				updated.setDevolutionDate(today);
 			}
 			
-			
-			updated.setPaymentValue(paymentValue);
+			updated.setPaymentValue(paymentValue + lateFee);
 			repository.save(updated);
 			
 			devolution.setId(updated.getId());

@@ -25,7 +25,7 @@ public class ReservationService {
 				() -> new EntityNotFoundException("Scheduling not found! ID " + id + " not exist."));
 	}
 	
-	public Reservation createScheduling(Reservation obj) {
+	public Reservation createReservation(Reservation obj) {
 		try {
 			return repository.save(obj);
 			
@@ -35,7 +35,7 @@ public class ReservationService {
 		}
 	}
 	
-	public Reservation updateScheduling(Long id, Reservation obj) {
+	public Reservation updateReservation(Long id, Reservation obj) {
 		Optional<Reservation> oldObj = repository.findById(id);
 		
 		if (oldObj.isPresent()) {
@@ -50,7 +50,7 @@ public class ReservationService {
 		return null;
 	}
 	
-	public void cancelScheduling(Long id) {
+	public void cancelReservation(Long id) {
 		repository.deleteById(id);
 	}
 }

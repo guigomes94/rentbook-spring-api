@@ -41,20 +41,20 @@ public class ReservationResource {
 	
 	@PostMapping
 	public ResponseEntity<?> create(@Valid @RequestBody Reservation obj) {
-		Reservation save = service.createScheduling(obj);
+		Reservation save = service.createReservation(obj);
 		return save != null ? ResponseEntity.status(HttpStatus.CREATED).body(save) : ResponseEntity.badRequest().build();
 	}
 	
 	@PutMapping("/{id}")
 	public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Reservation obj) {
-		Reservation updated = service.updateScheduling(id, obj);
+		Reservation updated = service.updateReservation(id, obj);
 		return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
 	}
 	
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable Long id) {
-		service.cancelScheduling(id);
+		service.cancelReservation(id);
 	}
 
 }
