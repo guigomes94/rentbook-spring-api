@@ -129,7 +129,7 @@ public class RentService {
 			Rent updated = oldObj.get();
 			
 			if (updated.getPaymentValue() != null) {
-				throw new BookAlreadyDevolved("This book has already been devolved!");
+				throw new BookAlreadyDevolved("Este empréstimo já foi concluído!");
 			}
 			
 			LocalDate rentDate = updated.getRentDate();
