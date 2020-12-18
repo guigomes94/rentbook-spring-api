@@ -31,6 +31,12 @@ public class BookResource {
 		return !response.isEmpty() ? ResponseEntity.ok(response) : ResponseEntity.noContent().build();
 	}
 	
+	@GetMapping("/availables")
+	public ResponseEntity<?> listAvailables() {
+		List<Book> response = service.findAvailables();
+		return !response.isEmpty() ? ResponseEntity.ok(response) : ResponseEntity.noContent().build();
+	}
+	
 	@GetMapping("/{id}")
 	public ResponseEntity<Book> findOne(@PathVariable Long id) {
 		Book response = service.findById(id);

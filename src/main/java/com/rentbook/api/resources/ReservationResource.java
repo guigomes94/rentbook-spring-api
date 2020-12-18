@@ -21,7 +21,7 @@ import com.rentbook.api.models.Reservation;
 import com.rentbook.api.services.ReservationService;
 
 @RestController
-@RequestMapping("/schedulings")
+@RequestMapping("/reservations")
 public class ReservationResource {
 	
 	@Autowired

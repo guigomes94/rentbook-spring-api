@@ -24,6 +24,10 @@ public class BookService {
 		return repository.findById(id).orElseThrow(
 				() -> new EntityNotFoundException("Book not found! ID " + id + " not exist."));
 	}
+	
+	public List<Book> findAvailables() {
+		return repository.listBooksAvailables();
+	}
 
 	public Book createBook(Book obj) {
 		try {

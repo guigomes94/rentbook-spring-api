@@ -75,7 +75,7 @@ public class Rent implements Serializable {
 		return rentDate;
 	}
 
-	public void setRentLocalDate(LocalDate rentDate) {
+	public void setRentDate(LocalDate rentDate) {
 		this.rentDate = rentDate;
 	}
 

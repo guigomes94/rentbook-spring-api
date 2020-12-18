@@ -24,6 +24,18 @@ public class RentService {
 		return repository.findAll();
 	}
 	
+	public List<Rent> findLastRents() {
+		LocalDate today = LocalDate.now();
+		LocalDate behind = today.minusDays(7);
+		return repository.listLastRents(today, behind);
+	}
+	
+	public List<Rent> findNextDevolutions() {
+		LocalDate today = LocalDate.now();
+		LocalDate after = today.plusDays(7);
+		return repository.listNextDevolutions(after, today);
+	}
+	
 	public Rent findById(Long id) {
 		return repository.findById(id).orElseThrow(
 				() -> new EntityNotFoundException("Rent not found! ID " + id + " not exist."));
@@ -60,6 +72,39 @@ public class RentService {
 		}
 		return calculatedRents;
 	}
+	
+	public List<Rent> calcRentValues(List<Rent> rents) {
+		List<Rent> calculatedRents = new ArrayList<>();
+
+		for (Rent rent : rents) {
+			LocalDate rentDate = rent.getRentDate();
+			LocalDate devolutionDate = rent.getDevolutionDate();
+			LocalDate today = LocalDate.now();
+			Double value = rent.getPaymentValue();
+			Double lateFee = 0.0;
+			
+			if (value == null) {
+				value = rent.calcRent(rentDate, devolutionDate);
+			}
+
+			if (devolutionDate.isBefore(today)) {
+				value = rent.calcRent(rentDate, today);
+				lateFee = rent.calcTicket(value);
+			}
+
+			Rent response = new Rent();
+			response.setId(rent.getId());
+			response.setUser(rent.getUser());
+			response.setBook(rent.getBook());
+			response.setRentDate(rent.getRentDate());
+			response.setDevolutionDate(rent.getDevolutionDate());
+			response.setPaymentValue(value + lateFee);
+
+			calculatedRents.add(response);
+		}
+		return calculatedRents;
+	}
+	
 
 	public Rent createRent(Rent obj) {
 
@@ -67,7 +112,10 @@ public class RentService {
 
 		if (changeAvailability != null) {
 			try {
-				return repository.save(obj);
+				Rent res = repository.save(obj);
+				Double value = res.calcRent(res.getRentDate(), res.getDevolutionDate());
+				res.setPaymentValue(value);
+				return res;
 
 			} catch (IllegalArgumentException e) {
 				return null;
@@ -78,10 +126,10 @@ public class RentService {
 	}
 
 	@SuppressWarnings("unused")
-	public RentDTO devolutionBook(Long id, Rent obj) { 
+	public Rent devolutionBook(Long id, Rent obj) { 
 		Optional<Rent> oldObj = repository.findById(id);
 		Book changeAvailability = bookService.changeAvailability(obj.getBook().getId());
-		RentDTO devolution = new RentDTO();
+		Rent devolution = new Rent();
 		
 		if (oldObj.isPresent()) {
 			Rent updated = oldObj.get();
@@ -91,22 +139,27 @@ public class RentService {
 			Double paymentValue = updated.calcRent(rentDate, devolutionDate);
 			Double lateFee = 0.0;
 			
-			if (devolutionDate.isBefore(today)) {
+			if (devolutionDate.isAfter(today)) {
 				devolutionDate = today;
 				paymentValue = updated.calcRent(rentDate, devolutionDate);
 				lateFee = updated.calcTicket(paymentValue);
 			}
 			
+			if (devolutionDate.isBefore(today)) {
+				devolutionDate = today;
+				paymentValue = updated.calcRent(rentDate, devolutionDate);
+			}
+			
+			
 			updated.setPaymentValue(paymentValue);
 			repository.save(updated);
 			
 			devolution.setId(updated.getId());
-			devolution.setUser(updated.getUser().getName());
-			devolution.setBook(updated.getBook().getTitle());
+			devolution.setUser(updated.getUser());
+			devolution.setBook(updated.getBook());
 			devolution.setRentDate(rentDate);
-			devolution.setDevolutionDate(devolutionDate);
-			devolution.setRentValue(paymentValue);
-			devolution.setLateFee(lateFee);
+			devolution.setDevolutionDate(today);
+			devolution.setPaymentValue(paymentValue + lateFee);
 			
 			return devolution;
 			

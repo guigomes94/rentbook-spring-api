@@ -29,8 +29,20 @@ public class RentResource {
 	@GetMapping
 	public ResponseEntity<?> listAll() {
 		List<Rent> list = service.findAll();
-		List<RentDTO> response = service.calcPaymentValues(list);
+		List<Rent> response = service.calcRentValues(list);
 		return !response.isEmpty() ? ResponseEntity.ok(response) : ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/lastrents")
+	public ResponseEntity<?> listLastRents() {
+		List<Rent> list = service.findLastRents();
+		return !list.isEmpty() ? ResponseEntity.ok(list) : ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/nextdevolutions")
+	public ResponseEntity<?> listNextDevolutions() {
+		List<Rent> list = service.findNextDevolutions();
+		return !list.isEmpty() ? ResponseEntity.ok(list) : ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/{id}")
@@ -48,7 +60,7 @@ public class RentResource {
 
 	@PutMapping("/{id}")
 	public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Rent obj) {
-		RentDTO updated = service.devolutionBook(id, obj);
+		Rent updated = service.devolutionBook(id, obj);
 		return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
 	}
 
